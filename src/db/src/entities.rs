@@ -76,7 +76,8 @@ pub enum TransactionData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionDataV1 {
     pub dex: Dex,
-    pub amount: u64,
+    pub token_amount: u64,
+    pub sol_amount: u64,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
