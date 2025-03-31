@@ -22,13 +22,13 @@ pub struct DbClient {
 }
 
 impl DbClient {
-    pub async fn connect(db_config: DbConfig) -> Result<Self, DbError> {
+    pub async fn connect(db_config: &DbConfig) -> Result<Self, DbError> {
         let (client, connection) = Config::new()
             .dbname(&db_config.name)
             .host(&db_config.host)
             .port(db_config.port)
             .user(&db_config.username)
-            .password(db_config.password)
+            .password(db_config.password.as_bytes())
             .connect(NoTls)
             .await?;
 
@@ -55,8 +55,8 @@ impl DbClient {
                 r#"
                     SELECT
                         transaction_id
-                        round_id,
                         user_id,
+                        round_id,
                         transaction_data
                     FROM transactions
                     WHERE round_id = $1 
