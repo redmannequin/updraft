@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref};
+use std::{fmt, marker::PhantomData, ops};
 
 use anyhow::Context;
 use uuid::Uuid;
@@ -16,11 +16,128 @@ pub struct TransactionId(Uuid);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UserId(Uuid);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Updraft(u64);
+////////////////////////////////////////////////////////////////////////////////
+// Tokens
+////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Sol(u64);
+pub struct Sol;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Updraft;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Token<T> {
+    inner: u64,
+    _ty: PhantomData<T>,
+}
+
+impl<T> Token<T> {
+    pub const ZERO: Self = Self::zero();
+
+    pub const fn zero() -> Self {
+        Token {
+            inner: 0,
+            _ty: PhantomData,
+        }
+    }
+
+    pub fn from_u64(amount: u64) -> Self {
+        Token {
+            inner: amount,
+            _ty: PhantomData,
+        }
+    }
+
+    pub fn to_u64(self) -> u64 {
+        self.inner
+    }
+}
+
+impl<T> ops::Add for Token<T> {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Token {
+            inner: self.inner + rhs.inner,
+            _ty: PhantomData,
+        }
+    }
+}
+
+impl<T> ops::AddAssign for Token<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        self.inner += rhs.inner;
+    }
+}
+
+impl<T> ops::Sub for Token<T> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Token {
+            inner: self.inner + rhs.inner,
+            _ty: PhantomData,
+        }
+    }
+}
+
+impl<T> ops::SubAssign for Token<T> {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.inner += rhs.inner;
+    }
+}
+
+impl<T> ops::Mul for Token<T> {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Token {
+            inner: self.inner * rhs.inner,
+            _ty: PhantomData,
+        }
+    }
+}
+
+impl<T> ops::MulAssign for Token<T> {
+    fn mul_assign(&mut self, rhs: Self) {
+        self.inner *= rhs.inner;
+    }
+}
+
+impl<T> ops::Div for Token<T> {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        Token {
+            inner: self.inner * rhs.inner,
+            _ty: PhantomData,
+        }
+    }
+}
+
+impl<T> ops::DivAssign for Token<T> {
+    fn div_assign(&mut self, rhs: Self) {
+        self.inner /= rhs.inner;
+    }
+}
+
+impl<T> ops::Rem for Token<T> {
+    type Output = Self;
+
+    fn rem(self, rhs: Self) -> Self::Output {
+        Token {
+            inner: self.inner % rhs.inner,
+            _ty: PhantomData,
+        }
+    }
+}
+
+impl<T> ops::RemAssign for Token<T> {
+    fn rem_assign(&mut self, rhs: Self) {
+        self.inner %= rhs.inner;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Transaction
@@ -31,8 +148,8 @@ pub struct Transaction {
     pub tx_id: TransactionId,
     pub user_id: UserId,
     pub round_id: RoundId,
-    pub token_amount: Updraft,
-    pub sol_amount: Sol,
+    pub token_amount: Token<Updraft>,
+    pub sol_amount: Token<Sol>,
     pub dex: Dex,
 }
 
@@ -49,8 +166,8 @@ impl From<db::entities::Transaction> for Transaction {
     fn from(value: db::entities::Transaction) -> Self {
         let (token_amount, sol_amount, dex) = match value.transaction_data.0 {
             db::entities::TransactionData::V1(transaction_data_v1) => {
-                let token_amount = Updraft(transaction_data_v1.token_amount);
-                let sol_amount = Sol(transaction_data_v1.sol_amount);
+                let token_amount = Token::from_u64(transaction_data_v1.token_amount);
+                let sol_amount = Token::from_u64(transaction_data_v1.sol_amount);
                 let dex = match transaction_data_v1.dex {
                     db::entities::Dex::Jupitor => Dex::Jupitor,
                 };
@@ -131,26 +248,3 @@ macro_rules! impl_uuid_ty {
 impl_uuid_ty!(UserId);
 impl_uuid_ty!(TransactionId);
 impl_uuid_ty!(RoundId);
-
-macro_rules! impl_token_ty {
-    ($T:ty) => {
-        impl $T {
-            pub const ZERO: Self = Self(0);
-
-            pub const fn to_u64(self) -> u64 {
-                self.0
-            }
-        }
-
-        impl Deref for $T {
-            type Target = u64;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-    };
-}
-
-impl_token_ty!(Updraft);
-impl_token_ty!(Sol);

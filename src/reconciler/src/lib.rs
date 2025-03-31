@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
-use common::{RoundId, Sol, Transaction, TransactionId, Updraft, UserId};
+use common::{RoundId, Sol, Token, Transaction, TransactionId, Updraft, UserId};
 use db::{DbClient, DbConfig};
 use serde::Deserialize;
 
@@ -91,8 +91,8 @@ impl UserRoundInfo {
 #[derive(Debug)]
 pub struct Bid {
     pub tx_id: TransactionId,
-    pub token_amount: Updraft,
-    pub sol_amount: Sol,
+    pub token_amount: Token<Updraft>,
+    pub sol_amount: Token<Sol>,
 }
 
 impl Bid {
@@ -105,8 +105,8 @@ impl Bid {
     }
 
     pub fn score(&self) -> f64 {
-        let token_amount = *self.token_amount as f64;
-        let sol_amount = *self.sol_amount as f64;
+        let token_amount = self.token_amount.to_u64() as f64;
+        let sol_amount = self.sol_amount.to_u64() as f64;
         (token_amount / sol_amount) * (1.0 + token_amount).log10()
     }
 }
