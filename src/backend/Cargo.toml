@@ -1,0 +1,16 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Local
+
+# External
+actix-web = { workspace = true }
+anyhow = { workspace = true }
+config = { workspace = true }
+dotenv = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
