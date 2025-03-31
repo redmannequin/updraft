@@ -1,16 +1,20 @@
 [workspace]
-members = ["src/app", "src/backend", "src/reconciler"]
+members = ["src/app", "src/backend", "src/db", "src/reconciler"]
 resolver = "3"
 
 [workspace.dependencies]
 # Local
+db = { path = "src/db" }
 
 # External
 actix-web = "4.10"
 anyhow = "1.0"
 config = "0.15"
+chrono = { version = "0.4", default-features = false }
 dotenv = "0.15"
 leptos = { version = "0.7", features = ["ssr"] }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0"
 tokio = { version = "1.44", features = ["rt", "macros"] }
+tokio-postgres = "0.7"
+uuid = { version = "1.16", features = ["v4", "serde"] }
