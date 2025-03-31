@@ -1,5 +1,5 @@
 [workspace]
-members = ["src/app", "src/backend"]
+members = ["src/app", "src/backend", "src/reconciler"]
 resolver = "3"
 
 [workspace.dependencies]

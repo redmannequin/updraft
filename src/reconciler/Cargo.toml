@@ -1,0 +1,14 @@
+[package]
+name = "reconciler"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Local
+
+# External
+anyhow = { workspace = true }
+config = { workspace = true }
+dotenv = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
