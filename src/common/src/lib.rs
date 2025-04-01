@@ -140,6 +140,38 @@ impl<T> ops::RemAssign for Token<T> {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Round
+////////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Round {
+    pub round_id: RoundId,
+    pub round_status: RoundStatus,
+    pub round_winner: Option<RoundWinner>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RoundStatus {
+    Active,
+    ReconcileDue,
+    Reconciled,
+    Prosessing,
+    Done,
+}
+
+impl fmt::Display for RoundStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RoundWinner {
+    pub user_id: UserId,
+    pub tx_id: TransactionId,
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Transaction
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -161,6 +193,58 @@ pub enum Dex {
 ////////////////////////////////////////////////////////////////////////////////
 // Database Mappings
 ////////////////////////////////////////////////////////////////////////////////
+
+impl From<db::entities::Round> for Round {
+    fn from(value: db::entities::Round) -> Self {
+        let (round_status, round_winner) = match value.round_data.0 {
+            db::entities::RoundData::V1(round_data_v1) => {
+                let status = match round_data_v1.status {
+                    db::entities::RoundStatus::Active => RoundStatus::Active,
+                    db::entities::RoundStatus::ReconcileDue => RoundStatus::ReconcileDue,
+                    db::entities::RoundStatus::Reconciled => RoundStatus::Reconciled,
+                    db::entities::RoundStatus::Prosessing => RoundStatus::Prosessing,
+                    db::entities::RoundStatus::Done => RoundStatus::Done,
+                };
+
+                let winner = round_data_v1.winner.map(|w| RoundWinner {
+                    user_id: UserId(w.user_id),
+                    tx_id: TransactionId(w.tx_id),
+                });
+
+                (status, winner)
+            }
+        };
+
+        Round {
+            round_id: RoundId(value.round_id),
+            round_status,
+            round_winner,
+        }
+    }
+}
+
+impl From<Round> for db::entities::Round {
+    fn from(value: Round) -> Self {
+        db::entities::Round {
+            round_id: value.round_id.0,
+            round_data: db::entities::Json(db::entities::RoundData::V1(
+                db::entities::RoundDataV1 {
+                    status: match value.round_status {
+                        RoundStatus::Active => db::entities::RoundStatus::Active,
+                        RoundStatus::ReconcileDue => db::entities::RoundStatus::ReconcileDue,
+                        RoundStatus::Reconciled => db::entities::RoundStatus::Reconciled,
+                        RoundStatus::Prosessing => db::entities::RoundStatus::Prosessing,
+                        RoundStatus::Done => db::entities::RoundStatus::Done,
+                    },
+                    winner: value.round_winner.map(|w| db::entities::RoundWinner {
+                        user_id: w.user_id.0,
+                        tx_id: w.tx_id.0,
+                    }),
+                },
+            )),
+        }
+    }
+}
 
 impl From<db::entities::Transaction> for Transaction {
     fn from(value: db::entities::Transaction) -> Self {

@@ -43,15 +43,22 @@ pub enum RoundData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoundDataV1 {
-    status: RoundStatus,
-    winner: Option<Uuid>,
+    pub status: RoundStatus,
+    pub winner: Option<RoundWinner>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RoundWinner {
+    pub user_id: Uuid,
+    pub tx_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RoundStatus {
     Active,
-    Calculating,
-    Distributing,
+    ReconcileDue,
+    Reconciled,
+    Prosessing,
     Done,
 }
 
