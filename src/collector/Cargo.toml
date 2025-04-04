@@ -11,7 +11,9 @@ msg-broker = { workspace = true }
 
 # External
 anyhow = { workspace = true }
+base64 = { workspace = true }
 bincode = { workspace = true }
+borsh = { workspace = true }
 config = { workspace = true }
 dotenv = { workspace = true }
 futures = { workspace = true }
@@ -20,6 +22,6 @@ solana-client = { workspace = true }
 solana-commitment-config = { workspace = true }
 solana-signature = { workspace = true }
 solana-transaction-status-client-types = { workspace = true }
-tokio = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true }
 uuid = { workspace = true }
