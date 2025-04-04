@@ -9,16 +9,16 @@ use uuid::Uuid;
 #[derive(Debug, Clone)]
 pub struct User {
     pub user_id: Uuid,
-    pub user_data: Json<UserStats>,
+    pub user_data: Json<UserData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum UserStats {
-    V1(UserStatsV1),
+pub enum UserData {
+    V1(UserDataV1),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UserStatsV1 {
+pub struct UserDataV1 {
     pub rounds_participated: u64,
     pub rounds_won: u64,
     pub amount_won: u64,
@@ -69,6 +69,7 @@ pub enum RoundStatus {
 #[derive(Debug, Clone)]
 pub struct Transaction {
     pub tx_id: Uuid,
+    pub tx_signature: String,
     pub user_id: Uuid,
     pub round_id: Uuid,
     pub transaction_data: Json<TransactionData>,
@@ -89,5 +90,5 @@ pub struct TransactionDataV1 {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum Dex {
-    Jupitor,
+    Raydium,
 }

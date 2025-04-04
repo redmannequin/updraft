@@ -8,7 +8,7 @@ use tokio_postgres::{Config, NoTls, Row};
 use uuid::Uuid;
 
 pub mod entities;
-mod error;
+pub mod error;
 
 pub type Result<T> = std::result::Result<T, DbError>;
 
@@ -28,7 +28,14 @@ pub struct DataVersion<T> {
 }
 
 impl<T> DataVersion<T> {
-    pub fn new(inner: i32) -> Self {
+    pub fn init() -> Self {
+        DataVersion {
+            inner: 0,
+            _ty: PhantomData,
+        }
+    }
+
+    fn new(inner: i32) -> Self {
         DataVersion {
             inner,
             _ty: PhantomData,
@@ -193,6 +200,24 @@ impl DbClient {
         }
     }
 
+    pub async fn get_transaction<T>(
+        &self,
+        transaction_id: impl Into<Uuid>,
+    ) -> Result<Option<(T, DataVersion<T>)>>
+    where
+        T: From<Transaction>,
+    {
+        todo!()
+    }
+
+    pub async fn upsert_transctions(
+        &self,
+        transaction: impl Into<Transaction>,
+        data_version: DataVersion<Transaction>,
+    ) -> Result<()> {
+        todo!()
+    }
+
     pub async fn get_round_transactions<T>(&self, round_id: impl Into<Uuid>) -> Result<Vec<T>>
     where
         T: From<Transaction>,
@@ -203,7 +228,8 @@ impl DbClient {
             .query(
                 r#"
                     SELECT
-                        transaction_id
+                        transaction_id,
+                        transaction_signature,
                         user_id,
                         round_id,
                         transaction_data
@@ -250,9 +276,10 @@ where
 {
     let transaction = Transaction {
         tx_id: row.try_get(0)?,
-        user_id: row.try_get(1)?,
-        round_id: row.try_get(2)?,
-        transaction_data: row.try_get(3)?,
+        tx_signature: row.try_get(1)?,
+        user_id: row.try_get(2)?,
+        round_id: row.try_get(3)?,
+        transaction_data: row.try_get(4)?,
     };
     Ok(T::from(transaction))
 }

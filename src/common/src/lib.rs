@@ -13,8 +13,19 @@ pub struct RoundId(Uuid);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TransactionId(Uuid);
 
+impl TransactionId {
+    pub fn from_signature(signature: &str) -> Self {
+        TransactionId(Uuid::new_v5(&Uuid::NAMESPACE_OID, signature.as_bytes()))
+    }
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UserId(Uuid);
+
+impl UserId {
+    pub fn from_pubkey(key: &str) -> Self {
+        UserId(Uuid::new_v5(&Uuid::NAMESPACE_OID, key.as_bytes()))
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Tokens
@@ -140,6 +151,30 @@ impl<T> ops::RemAssign for Token<T> {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// User
+////////////////////////////////////////////////////////////////////////////////
+
+pub struct User {
+    pub user_id: UserId,
+    pub rounds_participated: u64,
+    pub rounds_won: u64,
+    pub amount_won: Token<Updraft>,
+    pub amount_clamied: Token<Updraft>,
+}
+
+impl User {
+    pub fn new(key: &str) -> Self {
+        User {
+            user_id: UserId::from_pubkey(key),
+            rounds_participated: 0,
+            rounds_won: 0,
+            amount_won: Token::ZERO,
+            amount_clamied: Token::ZERO,
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Round
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,9 +210,10 @@ pub struct RoundWinner {
 // Transaction
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
     pub tx_id: TransactionId,
+    pub tx_signature: String,
     pub user_id: UserId,
     pub round_id: RoundId,
     pub token_amount: Token<Updraft>,
@@ -187,12 +223,47 @@ pub struct Transaction {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dex {
-    Jupitor,
+    Raydium,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Database Mappings
 ////////////////////////////////////////////////////////////////////////////////
+
+impl From<db::entities::User> for User {
+    fn from(value: db::entities::User) -> Self {
+        let (rounds_participated, rounds_won, amount_won, amount_clamied) = match value.user_data.0
+        {
+            db::entities::UserData::V1(user_data_v1) => (
+                user_data_v1.rounds_participated,
+                user_data_v1.rounds_won,
+                Token::from_u64(user_data_v1.amount_won),
+                Token::from_u64(user_data_v1.amount_clamied),
+            ),
+        };
+        User {
+            user_id: UserId(value.user_id),
+            rounds_participated,
+            rounds_won,
+            amount_won,
+            amount_clamied,
+        }
+    }
+}
+
+impl From<User> for db::entities::User {
+    fn from(value: User) -> Self {
+        db::entities::User {
+            user_id: value.user_id.0,
+            user_data: db::entities::Json(db::entities::UserData::V1(db::entities::UserDataV1 {
+                rounds_participated: value.rounds_participated,
+                rounds_won: value.rounds_won,
+                amount_won: value.amount_won.inner,
+                amount_clamied: value.amount_clamied.inner,
+            })),
+        }
+    }
+}
 
 impl From<db::entities::Round> for Round {
     fn from(value: db::entities::Round) -> Self {
@@ -253,7 +324,7 @@ impl From<db::entities::Transaction> for Transaction {
                 let token_amount = Token::from_u64(transaction_data_v1.token_amount);
                 let sol_amount = Token::from_u64(transaction_data_v1.sol_amount);
                 let dex = match transaction_data_v1.dex {
-                    db::entities::Dex::Jupitor => Dex::Jupitor,
+                    db::entities::Dex::Raydium => Dex::Raydium,
                 };
                 (token_amount, sol_amount, dex)
             }
@@ -261,11 +332,32 @@ impl From<db::entities::Transaction> for Transaction {
 
         Transaction {
             tx_id: TransactionId(value.tx_id),
+            tx_signature: value.tx_signature,
             user_id: UserId(value.user_id),
             round_id: RoundId(value.round_id),
             token_amount,
             sol_amount,
             dex,
+        }
+    }
+}
+
+impl From<Transaction> for db::entities::Transaction {
+    fn from(value: Transaction) -> Self {
+        db::entities::Transaction {
+            tx_id: value.tx_id.0,
+            tx_signature: value.tx_signature,
+            user_id: value.user_id.0,
+            round_id: value.round_id.0,
+            transaction_data: db::entities::Json(db::entities::TransactionData::V1(
+                db::entities::TransactionDataV1 {
+                    dex: match value.dex {
+                        Dex::Raydium => db::entities::Dex::Raydium,
+                    },
+                    token_amount: value.token_amount.inner,
+                    sol_amount: value.sol_amount.inner,
+                },
+            )),
         }
     }
 }

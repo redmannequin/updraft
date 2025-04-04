@@ -1,0 +1,25 @@
+[package]
+name = "collector"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Local
+common = { workspace = true }
+db = { workspace = true }
+msg-broker = { workspace = true }
+
+# External
+anyhow = { workspace = true }
+bincode = { workspace = true }
+config = { workspace = true }
+dotenv = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true }
+solana-client = { workspace = true }
+solana-commitment-config = { workspace = true }
+solana-signature = { workspace = true }
+solana-transaction-status-client-types = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
