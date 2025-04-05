@@ -19,6 +19,7 @@ use tokio::{
 
 mod error;
 mod handlers;
+mod program;
 
 #[derive(Debug, Deserialize)]
 pub struct SolanaConfig {

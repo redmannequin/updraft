@@ -8,6 +8,7 @@ edition = "2024"
 common = { workspace = true }
 db = { workspace = true }
 msg-broker = { workspace = true }
+sol-ez = { workspace = true }
 
 # External
 anyhow = { workspace = true }
@@ -25,3 +26,6 @@ solana-transaction-status-client-types = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 uuid = { workspace = true }
+
+[build-dependencies]
+sol-gen = { workspace = true }

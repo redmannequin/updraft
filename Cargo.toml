@@ -7,6 +7,8 @@ members = [
     "src/db",
     "src/msg-broker",
     "src/reconciler",
+    "src/sol-ez",
+    "src/sol-gen",
 ]
 resolver = "3"
 
@@ -15,6 +17,8 @@ resolver = "3"
 common = { path = "src/common" }
 db = { path = "src/db" }
 msg-broker = { path = "src/msg-broker" }
+sol-ez = { path = "src/sol-ez" }
+sol-gen = { path = "src/sol-gen" }
 
 # External
 actix-web = "4.10"
@@ -24,16 +28,22 @@ bincode = { version = "2.0", features = ["derive"] }
 borsh = { version = "1.5", features = ["derive"] }
 chrono = { version = "0.4", default-features = false }
 config = "0.15"
+convert_case = "0.8"
 dotenv = "0.15"
 futures = "0.3"
 leptos = { version = "0.7", features = ["ssr"] }
+prettyplease = "0.2"
+proc-macro2 = "1.0"
+quote = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_path_to_error = "0.1"
+sha2 = "0.10"
 solana-client = "2.2"
 solana-commitment-config = "2.2"
 solana-signature = "2.2"
 solana-transaction-status-client-types = "2.2"
+syn = "2.0"
 thiserror = "2.0"
 tokio = { version = "1.44", features = ["rt", "macros"] }
 tokio-postgres = "0.7"
